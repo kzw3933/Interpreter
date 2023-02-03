@@ -1,8 +1,8 @@
 #include <stdio.h>
-#include "common.h"
-#include "compiler.h"
-#include "vm.h"
-#include "debug.h"
+#include "include/common.h"
+#include "include/compiler.h"
+#include "include/vm.h"
+#include "include/debug.h"
 
 VM vm;
 

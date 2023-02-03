@@ -1,8 +1,8 @@
 #include <stdio.h>
 #include <string.h>
 
-#include "common.h"
-#include "scanner.h"
+#include "include/common.h"
+#include "include/scanner.h"
 
 typedef struct {
     const char* start;
@@ -42,6 +42,14 @@ static bool match(char expected) {
     return true;
 }
 
+static char peek() {
+    return *scanner.current;
+}
+
+static char peekNext() {
+    return scanner.current[1];
+}
+
 static Token makeToken(TokenType type) {
     Token token;
     token.type = type;
@@ -55,7 +63,7 @@ static Token errorToken(const char* message) {
     Token token;
     token.type = TOKEN_ERROR;
     token.start = message;
-    token.length = (int)(message);
+    token.length = (int)strlen(message);
     token.line = scanner.line;
     return token;
 }
@@ -75,7 +83,7 @@ static void skipWhitespace() {
                 break;
             case '/':
                 if(peekNext() == '/') {
-                    while(peek() != '\n' && !isAtEnd()) advance(;
+                    while(peek() != '\n' && !isAtEnd()) advance();
                 } else {
                     return ;
                 }
@@ -153,13 +161,7 @@ static Token identifier() {
     while(isAlpha(peek()) || isDigit(peek())) advance();
     return makeToken(identifierType());
 }
-static char peek() {
-    return *scanner.current;
-}
 
-static char peekNext() {
-    return scanner.current[1];
-}
 
 Token scanToken() {
     skipWhitespace();
