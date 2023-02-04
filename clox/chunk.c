@@ -3,7 +3,7 @@
 #include "include/chunk.h"
 #include "include/memory.h"
 
-void init_chunk(Chunk *chunk) {
+void initChunk(Chunk *chunk) {
     chunk->count = 0;
     chunk->capacity = 0;
     chunk->code = NULL;
@@ -11,7 +11,7 @@ void init_chunk(Chunk *chunk) {
     initValueArray(&chunk->constants);
 }
 
-void free_chunk(Chunk *chunk) {
+void freeChunk(Chunk *chunk) {
     FREE_ARRAY(uint8_t, chunk->code, chunk->capacity);
     FREE_ARRAY(int, chunk->lines, chunk->capacity);
     freeValueArray(&chunk->constants);

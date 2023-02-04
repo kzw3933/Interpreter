@@ -1,5 +1,4 @@
 #include <stdio.h>
-#include "include/chunk.h"
 #include "include/common.h"
 #include "include/compiler.h"
 #include "include/vm.h"
