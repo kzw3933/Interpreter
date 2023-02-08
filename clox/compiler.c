@@ -69,9 +69,9 @@ static void errorAtCurrent(const char* message) {
 
 static void advance() {
     parser.previous = parser.current;
-
     for(;;) {
         parser.current = scanToken();
+        if(parser.current.type == TOKEN_EOF) break;
         if(parser.current.type != TOKEN_ERROR) break;
         errorAtCurrent(parser.current.start);
     }
@@ -213,7 +213,7 @@ static void parsePrecedence(Precedence precedence) {
     prefixRule();
     while(precedence <= getRule(parser.current.type)->precedence) {
         advance();
-        ParseFn infixRule = getRule(parser.current.type)->infix;
+        ParseFn infixRule = getRule(parser.previous.type)->infix;
         infixRule();
     }
 }
