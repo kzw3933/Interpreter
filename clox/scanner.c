@@ -195,7 +195,7 @@ Token scanToken() {
             match('=') ? TOKEN_LESS_EQUAL: TOKEN_LESS
         );
         case '>': return makeToken(
-            match('=') ? TOKEN_GRATER_EQUAL: TOKEN_GRATER
+            match('=') ? TOKEN_GREATER_EQUAL: TOKEN_GREATER
         );
         case '"': return string();
     }
