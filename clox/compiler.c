@@ -139,7 +139,7 @@ static uint8_t identifierConstant(Token* name) {
     return makeConstant(OBJ_VAL(copyString(name->start, name->length)));
 }
 
-static void parseVariable(const char* errorMessage) {
+static uint8_t parseVariable(const char* errorMessage) {
     consume(TOKEN_IDENTIFIER, errorMessage);
     return identifierConstant(&parser.previous);
 }
