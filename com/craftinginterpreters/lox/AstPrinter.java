@@ -33,12 +33,30 @@ public class AstPrinter implements Expr.Visitor<String> {
 
     @Override 
     public String visitAssignExpr(Expr.Assign expr) {
-        return parenthesize("=", new Expr.Variable(expr.name), expr.value);
+        StringBuilder builder = new StringBuilder();
+        builder.append("(").append("=");
+        builder.append(" ").append(expr.name.lexeme);
+        builder.append(" ").append(expr.value.accept(this));
+        builder.append(")");
+        return builder.toString();
     }
 
     @Override
     public String visitLogicalExpr(Expr.Logical expr) {
         return parenthesize(expr.operator.lexeme, expr.left, expr.right);
+    }
+
+    @Override
+    public String visitCallExpr(Expr.Call expr) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("(").append("call");
+        builder.append(" ").append(expr.callee.accept(this));
+        for(Expr arg: expr.arguments) {
+            builder.append(" ");
+            builder.append(arg.accept(this));
+        }
+        builder.append(")");
+        return builder.toString();
     }
 
     private String parenthesize(String name, Expr... exprs) {
