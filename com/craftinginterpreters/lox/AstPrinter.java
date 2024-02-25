@@ -59,6 +59,31 @@ public class AstPrinter implements Expr.Visitor<String> {
         return builder.toString();
     }
 
+    @Override
+    public String visitGetExpr(Expr.Get expr) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("(").append("get");
+        builder.append(" ").append(expr.object.accept(this));
+        builder.append(" ").append(expr.name.lexeme);
+        builder.append(")");
+        return builder.toString();
+    }
+
+    @Override
+    public String visitSetExpr(Expr.Set expr) {
+        StringBuilder builder = new StringBuilder();
+        builder.append("(").append("set");
+        builder.append(" ").append(expr.object.accept(this));
+        builder.append(" ").append(expr.name.lexeme);
+        builder.append(")");
+        return builder.toString();
+    }
+
+    @Override 
+    public String visitThisExpr(Expr.This expr) {
+        return "this";
+    }
+
     private String parenthesize(String name, Expr... exprs) {
         StringBuilder builder = new StringBuilder();
         builder.append("(").append(name);
@@ -80,5 +105,6 @@ public class AstPrinter implements Expr.Visitor<String> {
                 new Expr.Literal(45.67)));
     
         System.out.println(new AstPrinter().print(expression));
-      }
+    }
+
 }
