@@ -84,6 +84,11 @@ public class AstPrinter implements Expr.Visitor<String> {
         return "this";
     }
 
+    @Override 
+    public String visitSuperExpr(Expr.Super expr) {
+        return "super";
+    }
+
     private String parenthesize(String name, Expr... exprs) {
         StringBuilder builder = new StringBuilder();
         builder.append("(").append(name);

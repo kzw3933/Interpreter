@@ -8,7 +8,7 @@ import java.util.List;
 /* 句法文法
  * program      ->  declaration* EOF;
  * declaration  ->  classDecl | funDecl | varDecl | statement;
- * classDecl    ->  "class" IDENTIFIER "{" function* "}";
+ * classDecl    ->  "class" IDENTIFIER ("<" IDENTIFIER )? "{" function* "}";
  * funDecl      ->  "fun" function;
  * function     ->  IDENTIFIER "(" parameters? ")" block;
  * parameters   ->  IDENTIFIER ("," IDENTIFIER)*;
@@ -32,10 +32,8 @@ import java.util.List;
  * unary        ->  ("!" | "-") unary | call;
  * call         ->  primary ( "(" arguments? ")" | "." IDENTIFIER )*;
  * arguments    ->  expression ( "," expression )*;
- * primary      ->  "true" | "false" | "nil" | NUMBER | STRING | "(" expression ")" | IDENTIFIER;
+ * primary      ->  "true" | "false" | "nil" | "this" | NUMBER | STRING | "(" expression ")" | IDENTIFIER | "super" "." IDENTIFIER;
  */
-
-import java.util.List;
 
 import static com.craftinginterpreters.lox.TokenType.*;
 
@@ -206,13 +204,18 @@ public class Parser {
 
     private Stmt classDeclaration() {
         Token name = consume(IDENTIFIER, "Expect class name.");
+        Expr.Variable superclass = null;
+        if(match(LESS)) {
+            consume(IDENTIFIER, "Expect supeclass name.");
+            superclass = new Expr.Variable(previous());
+        }
         consume(LEFT_BRACE, "Expect '{' before class body.");
         List<Stmt.Function> methods = new ArrayList<>();
         while(!check(RIGHT_BRACE) && !isAtEnd()) {
             methods.add(function("method"));
         }
         consume(RIGHT_BRACE, "Expect '}' after class body.");
-        return new Stmt.Class(name, methods);
+        return new Stmt.Class(name, superclass, methods);
     }
 
     private Expr expression() {
@@ -342,6 +345,12 @@ public class Parser {
 
         if(match(NUMBER, STRING)) {
             return new Expr.Literal(previous().literal);
+        }
+        if(match(SUPER)) {
+            Token keyword = previous();
+            consume(DOT, "Expect '.' after 'super'.");
+            Token method = consume(IDENTIFIER, "Expect superclass method name.");
+            return new Expr.Super(keyword, method);
         }
         if(match(THIS)) return new Expr.This(previous());
         if(match(IDENTIFIER)) {
