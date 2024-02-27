@@ -11,7 +11,6 @@ primary     ->  NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")";
 
 from expr import *
 from error import error_handler, ParseError
-from error import ParseError
 from token_type import TokenType
 
 class Parser:
@@ -118,7 +117,7 @@ class Parser:
     def previous(self):
         return self.tokens[self.current - 1]
 
-    def error(token, message):
+    def error(self, token, message):
         error_handler.error_at_token(token, message)
         return ParseError()
 
