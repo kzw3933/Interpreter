@@ -2,6 +2,5 @@
 
 - java(书中实现)
 - python
-- javascript
 - c(书中实现)
 - rust
