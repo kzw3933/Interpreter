@@ -1,6 +1,6 @@
 from token_type import TokenType
 from lox_token import Token
-from error_handler import error_handler
+from error import error_handler
 
 def is_alpha(c):
     return c >= 'a' and c <= 'z' or c >= 'A' and c <= 'Z' or c == '_'
@@ -95,7 +95,7 @@ class Scanner:
                 elif is_alpha(c):
                     self.identifier()
                 else:
-                    error_handler.error(self.line, "Unexpected character.")
+                    error_handler.error_at_line(self.line, "Unexpected character.")
 
     def identifier(self):
         while is_alpha_digit(self.peek()):
@@ -119,14 +119,14 @@ class Scanner:
         while self.peek() != '"' and not self.is_at_end():
             if self.peek() == '\n':
                 self.line += 1
-                self.advance()
+            self.advance()
         if self.is_at_end():
-            error_handler.error(self.line, "Unterminated string.")
+            error_handler.error_at_line(self.line, "Unterminated string.")
             return
         
         self.advance()
 
-        value = self.source[self.start:self.current-1]
+        value = self.source[self.start+1:self.current-1]
         self.add_token(TokenType.STRING, value)
 
     

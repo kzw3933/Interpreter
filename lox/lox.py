@@ -4,7 +4,9 @@ import os
 sys.path.append(os.path.dirname(__file__))
 
 from scanner import Scanner
-from error_handler import error_handler
+from error import error_handler
+from ast_printer import AstPrinter
+from lox_parser import Parser
 
 def main():
     if len(sys.argv) > 2:
@@ -35,8 +37,11 @@ def run_prompt():
 def run(source):
     scanner = Scanner(source)
     tokens = scanner.scan_tokens()
-    for token in tokens:
-        print(token)
+    parser = Parser(tokens)
+    expression = parser.parse()
+    if(error_handler.had_error):
+        return
+    print(AstPrinter().print(expression))
 
 
 if __name__ == "__main__":

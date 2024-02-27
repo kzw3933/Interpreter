@@ -3,11 +3,11 @@ import os
 
 sys.path.append(os.path.dirname(__file__))
 
-import expr
+from expr import *
 from lox_token import Token
 from token_type import TokenType
 
-class AstPrinter(expr.Visitor):
+class AstPrinter(Visitor):
     def visit_binary_expr(self, expr):
         return f"({expr.operator.lexeme} {' '.join([expr.accept(self) for expr in [expr.left, expr.right]])})"
 
@@ -24,14 +24,14 @@ class AstPrinter(expr.Visitor):
         return expr.accept(self)
     
 def main():
-    expression = expr.Binary(
-        expr.Unary(
+    expression = Binary(
+        Unary(
             Token(TokenType.MINUS, "-", None, 1),
-            expr.Literal(123)
+            Literal(123)
         ),
         Token(TokenType.STAR, "*", None, 1),
-        expr.Grouping(
-            expr.Literal(45.67)
+        Grouping(
+            Literal(45.67)
         )
     )
     print(AstPrinter().print(expression))
