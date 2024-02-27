@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 
-from tokentype import TokenType
+from token_type import TokenType
 
 @dataclass(init=True, repr=True)
 class Token:

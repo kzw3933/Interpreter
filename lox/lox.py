@@ -4,7 +4,7 @@ import os
 sys.path.append(os.path.dirname(__file__))
 
 from scanner import Scanner
-from errorhandler import error_handler
+from error_handler import error_handler
 
 def main():
     if len(sys.argv) > 2:
