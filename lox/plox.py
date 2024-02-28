@@ -1,12 +1,12 @@
 import sys
 import os
 
-sys.path.append(os.path.dirname(__file__))
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from scanner import Scanner
-from error import error_handler
-from ast_printer import AstPrinter
-from lox_parser import Parser
+from lox.scanner import Scanner
+from lox.error import error_handler
+from lox.parser import Parser
+from tool.ast_printer import AstPrinter
 
 def main():
     if len(sys.argv) > 2:

@@ -1,8 +1,8 @@
 from typing import List, Optional
 
-from token_type import TokenType
-from lox_token import Token
-from error import error_handler
+from lox.tokentype import TokenType
+from lox.token import Token
+from lox.error import error_handler
 
 def is_alpha(c):
     return c >= 'a' and c <= 'z' or c >= 'A' and c <= 'Z' or c == '_'

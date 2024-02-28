@@ -9,9 +9,9 @@ unary       ->  ( "!" | "-" ) unary | primary;
 primary     ->  NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")";
 """
 
-from expr import *
-from error import error_handler, ParseError
-from token_type import TokenType
+from lox.expr import *
+from lox.error import error_handler, ParseError
+from lox.tokentype import TokenType
 
 class Parser:
     def __init__(self, tokens):

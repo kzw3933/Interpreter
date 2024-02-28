@@ -1,5 +1,5 @@
 import sys
-from token_type import TokenType
+from lox.tokentype import TokenType
 
 class ErrorHandler:
     def __init__(self):

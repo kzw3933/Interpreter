@@ -1,11 +1,11 @@
 import sys
 import os
 
-sys.path.append(os.path.dirname(__file__))
+sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from expr import *
-from lox_token import Token
-from token_type import TokenType
+from lox.expr import *
+from lox.token import Token
+from lox.tokentype import TokenType
 
 class AstPrinter(Visitor):
     def visit_binary_expr(self, expr):
