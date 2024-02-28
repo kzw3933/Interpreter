@@ -4,9 +4,11 @@ import os
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from lox.scanner import Scanner
-from lox.error import error_handler
 from lox.parser import Parser
-from tool.ast_printer import AstPrinter
+
+from lox.error import error_handler
+from lox.interpreter import interpreter
+
 
 def main():
     if len(sys.argv) > 2:
@@ -22,6 +24,8 @@ def run_file(filename):
         run(f.read())
     if error_handler.had_error:
         sys.exit(65)
+    if error_handler.had_runtime_error:
+        sys.exit(70)
 
 def run_prompt():
     while True:
@@ -39,7 +43,7 @@ def run(source):
     expression = parser.parse()
     if(error_handler.had_error):
         return
-    print(AstPrinter().print(expression))
+    interpreter.interpret(expression)
 
 
 if __name__ == "__main__":

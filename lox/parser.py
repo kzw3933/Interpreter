@@ -10,7 +10,7 @@ primary     ->  NUMBER | STRING | "true" | "false" | "nil" | "(" expression ")";
 """
 
 from lox.expr import *
-from lox.error import error_handler, ParseError
+from lox.error import error_handler, ErrorAtParse
 from lox.tokentype import TokenType
 
 class Parser:
@@ -21,7 +21,7 @@ class Parser:
     def parse(self):
         try:
             return self.expression()
-        except ParseError as e:
+        except ErrorAtParse as e:
             return None
         
     def expression(self):
@@ -83,8 +83,6 @@ class Parser:
         raise self.error(self.peek(), "Expect expression.")
     
 
-
-
     def match(self, *types):
         for type in types:
             if self.check(type):
@@ -117,7 +115,7 @@ class Parser:
 
     def error(self, token, message):
         error_handler.error_at_token(token, message)
-        return ParseError()
+        return ErrorAtParse()
 
     def synchronize(self):
         self.advance()
