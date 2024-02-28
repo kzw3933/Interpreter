@@ -1,7 +1,11 @@
-from lox.expr import *
+from typing import List
+
+import lox.expr as Expr
+import lox.stmt as Stmt
 from lox.error import error_handler, ErrorAtRuntime
 from lox.tokentype import TokenType
 from lox.token import Token
+from lox.environment import Environment
 
 
 def is_truthy(value: object):
@@ -38,21 +42,24 @@ def check_number_operands(operator: Token, left: object, right: object):
         return
     raise ErrorAtRuntime(operator, "Operands must be numbers.")
 
-class Interpreter(Visitor):
-    def interpret(self, expression) -> None:
+class Interpreter(Expr.Visitor, Stmt.Visitor):
+    def __init__(self):
+        self.environment = Environment()
+
+    def interpret(self, statements: List[Stmt.Stmt]) -> None:
         try:
-            value = self.evaluate(expression)
-            print(value)
+            for statement in statements:
+                self.execute(statement) 
         except ErrorAtRuntime as e:
             error_handler.runtime_error(e)
 
-    def visit_literal_expr(self, expr: Literal) -> object:
+    def visit_literal_expr(self, expr: Expr.Literal) -> object:
         return expr.value
     
-    def visit_grouping_expr(self, expr: Grouping) -> object:
+    def visit_grouping_expr(self, expr: Expr.Grouping) -> object:
         return self.evaluate(expr.expression)
     
-    def visit_unary_expr(self, expr: Unary) -> object:
+    def visit_unary_expr(self, expr: Expr.Unary) -> object:
         value = self.evaluate(expr.right)
         if expr.operator.type == TokenType.MINUS:
             return -float(value)
@@ -61,7 +68,7 @@ class Interpreter(Visitor):
         
         return None
     
-    def visit_binary_expr(self, expr: Binary) -> object:
+    def visit_binary_expr(self, expr: Expr.Binary) -> object:
         left = self.evaluate(expr.left)
         right = self.evaluate(expr.right)
         match expr.operator.type:
@@ -98,8 +105,44 @@ class Interpreter(Visitor):
                 return float(left) / float(right)
             case _:
                 return None
+            
+    def visit_variable_expr(self, expr: Expr.Variable) -> object:
+        return self.environment.get(expr.name)
+    
+    def visit_assign_expr(self, expr: Expr.Assign) -> object:
+        value = self.evaluate(expr.value)
+        self.environment.assign(expr.name, value)
+        return value
+    
+    def visit_expression_stmt(self, stmt: Stmt.Expression) -> None:
+        self.evaluate(stmt.expression)
+    
+    def visit_print_stmt(self, stmt: Stmt.Print):
+        value = self.evaluate(stmt.expression)
+        print(stringify(value))
 
-    def evaluate(self, expression) -> object:
+    def visit_var_stmt(self, stmt: Stmt.Var):
+        value = None
+        if stmt.initializer is not None:
+            value = self.evaluate(stmt.initializer)
+        self.environment.define(stmt.name.lexeme, value)
+
+    def visit_block_stmt(self, stmt: Stmt.Block):
+        self.execute_block(stmt.statements, Environment(self.environment))    
+
+    def evaluate(self, expression: Expr.Expr) -> object:
         return expression.accept(self)
+    
+    def execute(self, statement: Stmt.Stmt) -> None:
+        statement.accept(self)
+
+    def execute_block(self, statements: List[Stmt.Stmt], environment: Environment):
+        previous = self.environment
+        try:
+            self.environment = environment
+            for statement in statements: 
+                self.execute(statement)
+        finally:
+            self.environment = previous
     
 interpreter = Interpreter()

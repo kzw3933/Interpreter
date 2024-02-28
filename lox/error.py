@@ -15,20 +15,20 @@ class ErrorHandler:
         self.had_error = False
         self.had_runtime_error = False
 
-    def error_at_line(self, line, message):
+    def error_at_line(self, line, message) -> None:
         self.report(line, "", message)
 
-    def error_at_token(self, token, message):
+    def error_at_token(self, token, message) -> None:
         if token.type == TokenType.EOF:
             self.report(token.line, "at end", message)
         else:
             self.report(token.line, f"at '{token.lexeme}'", message)
 
-    def runtime_error(self, error: ErrorAtRuntime):
+    def runtime_error(self, error: ErrorAtRuntime) -> None:
         print(f"[line {error.token.line}] {error}")
         self.had_runtime_error = True
 
-    def report(self, line, where, message):
+    def report(self, line, where, message) -> None:
         sys.stderr.write(
             f"[line {line}] Error {where}: {message}"
         )

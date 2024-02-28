@@ -33,7 +33,7 @@ class Scanner:
         'while': TokenType.WHILE
     }
 
-    def __init__(self, source: str):
+    def __init__(self, source: str) -> None:
         self.source = source
         self.tokens = []
         self.start = 0
@@ -70,7 +70,12 @@ class Scanner:
                         self.advance()
                 else:
                     self.add_token(TokenType.SLASH)
-            case ' ', '\r', '\t': pass
+            case ' ':
+                pass
+            case '\r':
+                pass
+            case '\t': 
+                pass
             case '\n': self.line += 1
             case '"': self.string()
             case _:

@@ -3,35 +3,41 @@ import os
 
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
-from lox.expr import *
+import lox.expr as Expr
 from lox.token import Token
 from lox.tokentype import TokenType
 
-class AstPrinter(Visitor):
-    def visit_binary_expr(self, expr):
+class AstPrinter(Expr.Visitor):
+    def visit_binary_expr(self, expr: Expr.Binary):
         return f"({expr.operator.lexeme} {' '.join([expr.accept(self) for expr in [expr.left, expr.right]])})"
 
-    def visit_grouping_expr(self, expr):
+    def visit_grouping_expr(self, expr: Expr.Grouping):
         return f"(grouping {expr.expression.accept(self)})"
     
-    def visit_literal_expr(self, expr):
+    def visit_literal_expr(self, expr: Expr.Literal):
         return str(expr.value)
     
-    def visit_unary_expr(self, expr):
+    def visit_unary_expr(self, expr: Expr.Unary):
         return f"({expr.operator.lexeme} {expr.right.accept(self)})"
     
-    def print(self, expr):
+    def visit_variable_expr(self, expr: Expr.Variable):
+        return f"{expr.name}"
+    
+    def visit_assign_expr(self, expr: Expr.Assign):
+        return f"(= {expr.name.accept(self)} {expr.value.accept(self)})"
+    
+    def print(self, expr: Expr.Expr):
         return expr.accept(self)
     
 def main():
-    expression = Binary(
-        Unary(
+    expression = Expr.Binary(
+        Expr.Unary(
             Token(TokenType.MINUS, "-", None, 1),
-            Literal(123)
+            Expr.Literal(123)
         ),
         Token(TokenType.STAR, "*", None, 1),
-        Grouping(
-            Literal(45.67)
+        Expr.Grouping(
+            Expr.Literal(45.67)
         )
     )
     print(AstPrinter().print(expression))

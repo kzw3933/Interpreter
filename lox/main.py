@@ -40,10 +40,10 @@ def run(source):
     scanner = Scanner(source)
     tokens = scanner.scan_tokens()
     parser = Parser(tokens)
-    expression = parser.parse()
+    statements = parser.parse()
     if(error_handler.had_error):
         return
-    interpreter.interpret(expression)
+    interpreter.interpret(statements)
 
 
 if __name__ == "__main__":
