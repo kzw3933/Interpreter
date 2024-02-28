@@ -99,9 +99,7 @@ class Parser:
         raise self.error(self.peek(), message)
     
     def check(self, type):
-        if self.is_at_end():
-            return False
-        return self.peek().type == type
+        return not self.is_at_end() and self.peek().type == type 
     
     def advance(self):
         if not self.is_at_end():
@@ -126,22 +124,17 @@ class Parser:
         while not self.is_at_end():
             if self.previous().type == TokenType.SEMICOLON:
                 return
-            match self.peek().type:
-                case TokenType.CLASS:
-                    return
-                case TokenType.FUN:
-                    return
-                case TokenType.VAR:
-                    return
-                case TokenType.FOR:
-                    return
-                case TokenType.IF:
-                    return
-                case TokenType.WHILE:
-                    return
-                case TokenType.PRINT:
-                    return
-                case TokenType.RETURN:
-                    return
+            if self.peek().type in {
+                TokenType.CLASS,
+                TokenType.FUN,
+                TokenType.VAR,
+                TokenType.FOR,
+                TokenType.IF,
+                TokenType.WHILE,
+                TokenType.PRINT,
+                TokenType.RETURN,
+            }:
+                return
+            
             self.advance()
  

@@ -1,15 +1,21 @@
-class Visitor:
+from abc import ABC, abstractmethod
+
+class Visitor(ABC):
+    @abstractmethod
     def visit_binary_expr(self, expr):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def visit_grouping_expr(self, expr):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def visit_literal_expr(self, expr):
-        raise NotImplementedError
+        pass
 
+    @abstractmethod
     def visit_unary_expr(self, expr):
-        raise NotImplementedError
+        pass
 
 
 class Binary:

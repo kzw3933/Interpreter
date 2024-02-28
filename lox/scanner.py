@@ -1,3 +1,5 @@
+from typing import List, Optional
+
 from token_type import TokenType
 from lox_token import Token
 from error import error_handler
@@ -31,22 +33,22 @@ class Scanner:
         'while': TokenType.WHILE
     }
 
-    def __init__(self, source):
+    def __init__(self, source: str):
         self.source = source
         self.tokens = []
         self.start = 0
         self.current = 0
         self.line = 1
 
-    def scan_tokens(self):
+    def scan_tokens(self) -> List[Token]:
         while not self.is_at_end():
             self.start = self.current
             self.scan_token()
         self.tokens.append(Token(TokenType.EOF, '', None, self.line))
         return self.tokens
     
-    def scan_token(self):
-        c = self.advance()
+    def scan_token(self) -> None:
+        c: str = self.advance()
         match c:
             case '(': self.add_token(TokenType.LEFT_PAREN)
             case ')': self.add_token(TokenType.RIGHT_PAREN)
@@ -58,35 +60,17 @@ class Scanner:
             case '+': self.add_token(TokenType.PLUS)
             case ';': self.add_token(TokenType.SEMICOLON)
             case '*': self.add_token(TokenType.STAR)
-            case '!': 
-                if self.match('='):
-                    self.add_token(TokenType.BANG_EQUAL)
-                else:
-                    self.add_token(TokenType.BANG)
-            case '=':
-                if self.match('='):
-                    self.add_token(TokenType.EQUAL_EQUAL)
-                else:
-                    self.add_token(TokenType.EQUAL)
-            case '<':
-                if self.match('='):
-                    self.add_token(TokenType.LESS_EQUAL)
-                else:
-                    self.add_token(TokenType.LESS)
-            case '>':
-                if self.match('='):
-                    self.add_token(TokenType.GREATER_EQUAL)
-                else:
-                    self.add_token(TokenType.GREATER)
+            case '!': self.add_token(TokenType.BANG_EQUAL if self.match('=') else TokenType.BANG)
+            case '=': self.add_token(TokenType.EQUAL_EQUAL if self.match('=') else TokenType.EQUAL)
+            case '<': self.add_token(TokenType.LESS_EQUAL if self.match('=') else TokenType.LESS)
+            case '>': self.add_token(TokenType.GREATER_EQUAL if self.match('=') else TokenType.GREATER)
             case '/':
                 if self.match('/'):
                     while self.peek() != '\n' and not self.is_at_end():
                         self.advance()
                 else:
                     self.add_token(TokenType.SLASH)
-            case ' ': pass
-            case '\r': pass
-            case '\t': pass
+            case ' ', '\r', '\t': pass
             case '\n': self.line += 1
             case '"': self.string()
             case _:
@@ -97,16 +81,14 @@ class Scanner:
                 else:
                     error_handler.error_at_line(self.line, "Unexpected character.")
 
-    def identifier(self):
+    def identifier(self) -> None:
         while is_alpha_digit(self.peek()):
             self.advance()
-        text = self.source[self.start:self.current]
-        type = Scanner.keywords.get(text)
-        if type is None:
-            type = TokenType.IDENTIFIER
+        text: str = self.source[self.start:self.current]
+        type: TokenType = Scanner.keywords.get(text, TokenType.IDENTIFIER)
         self.add_token(type)
 
-    def number(self):
+    def number(self) -> None:
         while is_digit(self.peek()):
             self.advance()
         if self.peek() == '.' and is_digit(self.peek_next()):
@@ -115,7 +97,7 @@ class Scanner:
                 self.advance()
         self.add_token(TokenType.NUMBER, float(self.source[self.start:self.current]))
 
-    def string(self):
+    def string(self) -> None:
         while self.peek() != '"' and not self.is_at_end():
             if self.peek() == '\n':
                 self.line += 1
@@ -126,37 +108,31 @@ class Scanner:
         
         self.advance()
 
-        value = self.source[self.start+1:self.current-1]
+        value: str = self.source[self.start+1:self.current-1]
         self.add_token(TokenType.STRING, value)
 
     
-    def match(self, expected):
-        if(self.is_at_end()):
-            return False
-        if(self.source[self.current] != expected):
+    def match(self, expected: str) -> bool:
+        if(self.is_at_end()) or self.source[self.current] != expected:
             return False
         self.current += 1
         return True
     
-    def peek(self):
-        if(self.is_at_end()):
-            return '\0'
-        return self.source[self.current]
+    def peek(self) -> str:
+        return self.source[self.current] if not self.is_at_end() else '\0'
     
-    def peek_next(self):
-        if(self.current + 1 >= len(self.source)):
-            return '\0'
-        return self.source[self.current + 1]
+    def peek_next(self) -> str:
+        return self.source[self.current + 1] if self.current + 1 < len(self.source) else '\0'
     
-    def is_at_end(self):
+    def is_at_end(self) -> bool:
         return self.current >= len(self.source)
     
-    def advance(self):
+    def advance(self) -> str:
         self.current += 1
         return self.source[self.current-1]
     
-    def add_token(self, type, literal = None):
-        text = self.source[self.start:self.current]
+    def add_token(self, type: TokenType, literal: Optional[object] = None) -> None:
+        text: str = self.source[self.start:self.current]
         self.tokens.append(Token(type, text, literal, self.line))
     
 

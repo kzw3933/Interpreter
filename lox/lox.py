@@ -25,9 +25,7 @@ def run_file(filename):
 
 def run_prompt():
     while True:
-        sys.stdout.write("> ")
-        sys.stdout.flush()
-        line = sys.stdin.readline()
+        line = input("> ")
         if line == '':
             break
         run(line)
