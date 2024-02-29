@@ -11,6 +11,7 @@ def main():
         "Binary: Expr left, Token operator, Expr right",
         "Grouping: Expr expression",
         "Literal: object value",
+        "Logical: Expr left, Token operator, Expr right",
         "Unary: Token operator, Expr right",
         "Variable: Token name"
     ])
@@ -18,6 +19,8 @@ def main():
         "Block: List[Stmt] statements",
         "Expression: Expr expression",
         "Print: Expr expression",
+        "If: Expr condition, Stmt then_branch, Stmt else_branch",
+        "While: Expr condition, Stmt body",
         "Var: Token name, Expr initializer"
     ], "Expr")
 

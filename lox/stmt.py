@@ -30,6 +30,23 @@ class Print(Stmt):
     def accept(self, visitor):
         return visitor.visit_print_stmt(self)
 
+class If(Stmt):
+    def __init__(self, condition: Expr, then_branch: Stmt, else_branch: Stmt):
+        self.condition: Expr = condition
+        self.then_branch: Stmt = then_branch
+        self.else_branch: Stmt = else_branch
+
+    def accept(self, visitor):
+        return visitor.visit_if_stmt(self)
+
+class While(Stmt):
+    def __init__(self, condition: Expr, body: Stmt):
+        self.condition: Expr = condition
+        self.body: Stmt = body
+
+    def accept(self, visitor):
+        return visitor.visit_while_stmt(self)
+
 class Var(Stmt):
     def __init__(self, name: Token, initializer: Expr):
         self.name: Token = name
@@ -50,6 +67,14 @@ class Visitor(ABC):
 
     @abstractmethod
     def visit_print_stmt(self, stmt: Print):
+        pass
+
+    @abstractmethod
+    def visit_if_stmt(self, stmt: If):
+        pass
+
+    @abstractmethod
+    def visit_while_stmt(self, stmt: While):
         pass
 
     @abstractmethod

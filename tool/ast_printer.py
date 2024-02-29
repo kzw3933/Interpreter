@@ -26,6 +26,9 @@ class AstPrinter(Expr.Visitor):
     def visit_assign_expr(self, expr: Expr.Assign):
         return f"(= {expr.name.accept(self)} {expr.value.accept(self)})"
     
+    def visit_logical_expr(self, expr: Expr.Logical):
+        return f"({expr.operator.lexeme} {' '.join([expr.accept(self) for expr in [expr.left, expr.right]])})"
+    
     def print(self, expr: Expr.Expr):
         return expr.accept(self)
     

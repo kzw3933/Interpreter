@@ -3,12 +3,17 @@
 program     ->  declaration* EOF;
 declaration ->  varDecl | statement;
 varDecl     ->  "var" IDENTIFIER ("=" expression)? ";";
-statement   ->  exprStmt | printStmt | block;
+statement   ->  exprStmt | printStmt | block | forStmt | ifStmt | whileStmt;
 exprStmt    ->  expression ";";
 printStmt   ->  "print" expression ";";
 block       ->  "{" declaration* "}";
+forStmt     ->  "for" "(" (varDecl | exprStmt | ";") expression? ";" expression? ";" statement;
+ifStmt      ->  "if" "(" expression ")" statement ("else" statement)?;
+whileStmt   ->  "while" "(" expression ")" statement; 
 expression  ->  assignment;
-assignment  ->  IDENTIFIER "=" assignment | equality;
+assignment  ->  IDENTIFIER "=" assignment | logic_or;
+logic_or    ->  logic_and ("or" logic_and)*;
+logic_and   ->  equality ("and" equality)*;
 equality    ->  comparison ( ("!=" | "==) comparison)*;
 comparison  ->  term ( (">" | ">=" | "<" | "<=") term)*;
 term        ->  factor ( ("-" | "+") factor)*;
@@ -54,11 +59,67 @@ class Parser:
         return Stmt.Var(name, initializer)
     
     def statement(self) -> Stmt.Stmt:
+        if self.match(TokenType.FOR):
+            return self.for_statement()
+        if self.match(TokenType.IF):
+            return self.if_statement()
+        if self.match(TokenType.WHILE):
+            return self.while_statement()
         if self.match(TokenType.PRINT):
             return self.print_statement()
         if self.match(TokenType.LEFT_BRACE):
             return Stmt.Block(self.block())
         return self.expression_statement()
+    
+    def for_statement(self) -> Stmt.Stmt:
+        self.consume(TokenType.LEFT_PAREN, "Expect '(' after 'for'.")
+        if self.match(TokenType.SEMICOLON):
+            initializer = None
+        elif self.match(TokenType.VAR):
+            initializer = self.var_declaration()
+        else:
+            initializer = self.expression_statement()
+        condition = None
+        if not self.check(TokenType.SEMICOLON):
+            condition = self.expression()
+        self.consume(TokenType.SEMICOLON, "Expect ';' after loop condition.")
+        increment = None
+        if not self.check(TokenType.RIGHT_PAREN):
+            increment = self.expression()
+        self.consume(TokenType.RIGHT_PAREN, "Expect ')' after for clauses.")
+        body = self.statement()
+
+        if increment is not None:
+            body = Stmt.Block(
+                [body, Stmt.Expression(increment)]
+            )
+        if condition is None:
+            condition = Expr.Literal(True)
+        body = Stmt.While(condition, body)
+        if initializer is not None:
+            body = Stmt.Block([
+                initializer,
+                body
+            ])
+        return body
+    
+    def while_statement(self) -> Stmt.Stmt:
+        self.consume(TokenType.LEFT_PAREN, "Expect '(' after 'while'.")
+        condition = self.expression()
+        self.consume(TokenType.RIGHT_PAREN, "Expect ')' after condition.")
+        body = self.statement()
+        return Stmt.While(condition, body)
+    
+    def if_statement(self) -> Stmt.Stmt:
+        self.consume(TokenType.LEFT_PAREN, "Expect '(' after 'if'.")
+        condition = self.expression()
+        self.consume(TokenType.RIGHT_PAREN, "Expect ')' after condition.")
+        then_branch = self.statement()
+        else_branch = None
+        if self.match(TokenType.ELSE):
+            else_branch = self.statement()
+        return Stmt.If(condition, then_branch, else_branch)
+
     
     def print_statement(self) -> Stmt.Stmt:
         expression = self.expression()
@@ -81,7 +142,7 @@ class Parser:
         return self.assignment()
     
     def assignment(self) -> Expr.Expr:
-        expr = self.equality()
+        expr = self.or_expr()
         if self.match(TokenType.EQUAL):
             equals = self.previous()
             value = self.assignment()
@@ -89,6 +150,22 @@ class Parser:
                 name = expr.name
                 return Expr.Assign(name, value)
             self.error(equals, "Invalid assignment target.")
+        return expr
+    
+    def or_expr(self) -> Expr.Expr:
+        expr = self.and_expr()
+        while self.match(TokenType.OR):
+            operator = self.previous()
+            right = self.and_expr()
+            expr = Expr.Logical(expr, operator, right)
+        return expr
+    
+    def and_expr(self) -> Expr.Expr:
+        expr = self.equality()
+        while self.match(TokenType.AND):
+            operator = self.previous()
+            right = self.equality()
+            expr = Expr.Logical(expr, operator, right)
         return expr
     
     def equality(self) -> Expr.Expr:

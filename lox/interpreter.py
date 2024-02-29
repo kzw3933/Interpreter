@@ -46,20 +46,20 @@ class Interpreter(Expr.Visitor, Stmt.Visitor):
     def __init__(self):
         self.environment = Environment()
 
-    def interpret(self, statements: List[Stmt.Stmt]) -> None:
+    def interpret(self, statements: List[Stmt.Stmt]):
         try:
             for statement in statements:
                 self.execute(statement) 
         except ErrorAtRuntime as e:
             error_handler.runtime_error(e)
 
-    def visit_literal_expr(self, expr: Expr.Literal) -> object:
+    def visit_literal_expr(self, expr: Expr.Literal):
         return expr.value
     
-    def visit_grouping_expr(self, expr: Expr.Grouping) -> object:
+    def visit_grouping_expr(self, expr: Expr.Grouping):
         return self.evaluate(expr.expression)
     
-    def visit_unary_expr(self, expr: Expr.Unary) -> object:
+    def visit_unary_expr(self, expr: Expr.Unary):
         value = self.evaluate(expr.right)
         if expr.operator.type == TokenType.MINUS:
             return -float(value)
@@ -68,7 +68,7 @@ class Interpreter(Expr.Visitor, Stmt.Visitor):
         
         return None
     
-    def visit_binary_expr(self, expr: Expr.Binary) -> object:
+    def visit_binary_expr(self, expr: Expr.Binary):
         left = self.evaluate(expr.left)
         right = self.evaluate(expr.right)
         match expr.operator.type:
@@ -106,15 +106,25 @@ class Interpreter(Expr.Visitor, Stmt.Visitor):
             case _:
                 return None
             
-    def visit_variable_expr(self, expr: Expr.Variable) -> object:
+    def visit_variable_expr(self, expr: Expr.Variable):
         return self.environment.get(expr.name)
     
-    def visit_assign_expr(self, expr: Expr.Assign) -> object:
+    def visit_assign_expr(self, expr: Expr.Assign):
         value = self.evaluate(expr.value)
         self.environment.assign(expr.name, value)
         return value
     
-    def visit_expression_stmt(self, stmt: Stmt.Expression) -> None:
+    def visit_logical_expr(self, expr: Expr.Logical):
+        left = self.evaluate(expr.left)
+        if expr.operator.type == TokenType.OR:
+            if is_truthy(left):
+                return left
+        else:
+            if not is_truthy(left):
+                return left
+        return self.evaluate(expr.right)
+    
+    def visit_expression_stmt(self, stmt: Stmt.Expression):
         self.evaluate(stmt.expression)
     
     def visit_print_stmt(self, stmt: Stmt.Print):
@@ -128,7 +138,19 @@ class Interpreter(Expr.Visitor, Stmt.Visitor):
         self.environment.define(stmt.name.lexeme, value)
 
     def visit_block_stmt(self, stmt: Stmt.Block):
-        self.execute_block(stmt.statements, Environment(self.environment))    
+        self.execute_block(stmt.statements, Environment(self.environment))  
+
+    def visit_if_stmt(self, stmt: Stmt.If) -> None:
+        if is_truthy(self.evaluate(stmt.condition)):
+            self.execute(stmt.then_branch)
+        elif stmt.else_branch is not None:
+            self.execute(stmt.else_branch)
+        return None
+    
+    def visit_while_stmt(self, stmt: Stmt.While):
+        while is_truthy(self.evaluate(stmt.condition)):
+            self.execute(stmt.body)
+        return None
 
     def evaluate(self, expression: Expr.Expr) -> object:
         return expression.accept(self)
