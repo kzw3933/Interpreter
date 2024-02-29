@@ -2,7 +2,7 @@ from typing import List, Optional
 
 from lox.tokentype import TokenType
 from lox.token import Token
-from lox.error import error_handler
+from lox.error import *
 
 def is_alpha(c):
     return c >= 'a' and c <= 'z' or c >= 'A' and c <= 'Z' or c == '_'

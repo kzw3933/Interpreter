@@ -9,6 +9,7 @@ def main():
     define_ast(output_dir, "Expr", [
         "Assign: Token name, Expr value",
         "Binary: Expr left, Token operator, Expr right",
+        "Call: Expr callee, Token paren, List[Expr] arguments",
         "Grouping: Expr expression",
         "Literal: object value",
         "Logical: Expr left, Token operator, Expr right",
@@ -21,7 +22,9 @@ def main():
         "Print: Expr expression",
         "If: Expr condition, Stmt then_branch, Stmt else_branch",
         "While: Expr condition, Stmt body",
-        "Var: Token name, Expr initializer"
+        "Function: Token name, List[Token] params, List[Stmt] body",
+        "Var: Token name, Expr initializer",
+        "Return: Token keyword, Expr value",
     ], "Expr")
 
 def define_ast(output_dir: str, base_name: str, types: List[str], dependency: Optional[str]=None):

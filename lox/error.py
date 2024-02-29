@@ -10,6 +10,12 @@ class ErrorAtRuntime(Exception):
     def __init__(self, token: Token, message: str) -> None:
         super().__init__(message)
         self.token = token
+
+class Return(Exception):
+    def __init__(self, value):
+        super().__init__()
+        self.value = value
+        
 class ErrorHandler:
     def __init__(self):
         self.had_error = False

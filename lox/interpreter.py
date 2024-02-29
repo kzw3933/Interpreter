@@ -2,10 +2,13 @@ from typing import List
 
 import lox.expr as Expr
 import lox.stmt as Stmt
-from lox.error import error_handler, ErrorAtRuntime
+from lox.error import *
 from lox.tokentype import TokenType
 from lox.token import Token
 from lox.environment import Environment
+from lox.lib import Clock
+from lox.callable import LoxCallable
+from lox.function import LoxFunction
 
 
 def is_truthy(value: object):
@@ -44,7 +47,12 @@ def check_number_operands(operator: Token, left: object, right: object):
 
 class Interpreter(Expr.Visitor, Stmt.Visitor):
     def __init__(self):
-        self.environment = Environment()
+        self.globals = Environment()
+        self.environment = self.globals
+        self.globals.define(
+            "clock",
+            Clock()
+        )
 
     def interpret(self, statements: List[Stmt.Stmt]):
         try:
@@ -124,6 +132,18 @@ class Interpreter(Expr.Visitor, Stmt.Visitor):
                 return left
         return self.evaluate(expr.right)
     
+    def visit_call_expr(self, expr: Expr.Call):
+        callee = self.evaluate(expr.callee)
+        arguments = []
+        for argument in expr.arguments:
+            arguments.append(self.evaluate(argument))
+        if not isinstance(callee, LoxCallable):
+            raise ErrorAtRuntime(expr.paren, "Can only call functions and classes.")
+        function: LoxCallable = callee
+        if len(arguments) != function.arity():
+            raise ErrorAtRuntime(expr.paren, f"Expected {function.arity()} arguments but got {len(arguments)}.")
+        return function.call(self, arguments)
+    
     def visit_expression_stmt(self, stmt: Stmt.Expression):
         self.evaluate(stmt.expression)
     
@@ -151,6 +171,18 @@ class Interpreter(Expr.Visitor, Stmt.Visitor):
         while is_truthy(self.evaluate(stmt.condition)):
             self.execute(stmt.body)
         return None
+    
+    def visit_function_stmt(self, stmt: Stmt.Function):
+        function = LoxFunction(stmt, self.environment)
+        self.environment.define(stmt.name.lexeme, function)
+        return None
+    
+    def visit_return_stmt(self, stmt: Stmt.Return):
+        value = None
+        if stmt.value is not None:
+            value = self.evaluate(stmt.value)
+        raise Return(value)
+
 
     def evaluate(self, expression: Expr.Expr) -> object:
         return expression.accept(self)

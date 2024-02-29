@@ -6,7 +6,7 @@ sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 from lox.scanner import Scanner
 from lox.parser import Parser
 
-from lox.error import error_handler
+from lox.error import *
 from lox.interpreter import interpreter
 
 

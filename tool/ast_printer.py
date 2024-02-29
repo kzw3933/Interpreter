@@ -29,6 +29,9 @@ class AstPrinter(Expr.Visitor):
     def visit_logical_expr(self, expr: Expr.Logical):
         return f"({expr.operator.lexeme} {' '.join([expr.accept(self) for expr in [expr.left, expr.right]])})"
     
+    def visit_call_expr(self, expr: Expr.Call):
+        return f"(call {expr.callee.accept(self)} {', '.join([argument.accept(self) for argument in expr.arguments])})"
+
     def print(self, expr: Expr.Expr):
         return expr.accept(self)
     
