@@ -5,7 +5,7 @@ from lox.error import *
 class Environment:
     def __init__(self, enclosing=None) -> None:
         self.enclosing = enclosing
-        self.values = dict()
+        self.values = {}
 
     def define(self, name: str, value: object) -> None:
         self.values[name] = value
@@ -25,3 +25,16 @@ class Environment:
         if self.enclosing is not None:
             return self.enclosing.get(name)
         raise ErrorAtRuntime(name, f"Undefined variable '{name.lexeme}'.")
+    
+    def ancestor(self, distance: int):
+        environment = self
+        for _ in range(distance):
+            environment = environment.enclosing
+        return environment
+
+    
+    def assign_at(self, distance: int, name: Token, value: object) -> None:
+        self.ancestor(distance).values[name.lexeme] = value
+
+    def get_at(self, distance: int, name: Token) -> object:
+        return self.ancestor(distance).values[name.lexeme]

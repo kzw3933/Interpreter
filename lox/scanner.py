@@ -79,7 +79,7 @@ class Scanner:
             case '\n': self.line += 1
             case '"': self.string()
             case _:
-                if(is_digit(c)):
+                if is_digit(c):
                     self.number()
                 elif is_alpha(c):
                     self.identifier()
@@ -118,7 +118,7 @@ class Scanner:
 
     
     def match(self, expected: str) -> bool:
-        if(self.is_at_end()) or self.source[self.current] != expected:
+        if self.is_at_end() or self.source[self.current] != expected:
             return False
         self.current += 1
         return True

@@ -8,6 +8,7 @@ from lox.parser import Parser
 
 from lox.error import *
 from lox.interpreter import interpreter
+from lox.resolver import Resolver
 
 
 def main():
@@ -41,7 +42,11 @@ def run(source):
     tokens = scanner.scan_tokens()
     parser = Parser(tokens)
     statements = parser.parse()
-    if(error_handler.had_error):
+    if error_handler.had_error:
+        return
+    resolver = Resolver(interpreter)
+    resolver.resolve(statements)
+    if error_handler.had_error:
         return
     interpreter.interpret(statements)
 
