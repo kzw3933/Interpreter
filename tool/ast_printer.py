@@ -32,6 +32,15 @@ class AstPrinter(Expr.Visitor):
     def visit_call_expr(self, expr: Expr.Call):
         return f"(call {expr.callee.accept(self)} {', '.join([argument.accept(self) for argument in expr.arguments])})"
 
+    def visit_get_expr(self, expr: Expr.Get):
+        return f"(get {expr.object.accept(self)} {expr.name.lexeme}"
+    
+    def visit_set_expr(self, expr: Expr.Set):
+        return f"(set {expr.object.accept(self)} {expr.name.lexeme} {expr.value.accept(self)}"
+    
+    def visit_this_expr(self, expr: Expr.This):
+        return "this"
+
     def print(self, expr: Expr.Expr):
         return expr.accept(self)
     

@@ -2,7 +2,7 @@ from typing import List, Dict
 
 import lox.expr as Expr
 import lox.stmt as Stmt
-from lox.types import FunctionType
+from lox.types import FunctionType, ClassType
 from lox.error import error_handler
 from lox.token import Token
 from lox.interpreter import Interpreter
@@ -12,6 +12,7 @@ class Resolver(Expr.Visitor, Stmt.Visitor):
         self.interpreter = interpreter
         self.scopes: List[Dict[str, bool]] = []
         self.current_function = FunctionType.NONE
+        self.current_class = ClassType.NONE
 
     def visit_variable_expr(self, expr: Expr.Variable):
         if len(self.scopes) > 0 and expr.name.lexeme in self.scopes[-1] and self.scopes[-1][expr.name.lexeme] is False:
@@ -51,6 +52,22 @@ class Resolver(Expr.Visitor, Stmt.Visitor):
         self.resolve(expr.right)
         return None
     
+    def visit_get_expr(self, expr: Expr.Get):
+        self.resolve(expr.object)
+        return None
+    
+    def visit_set_expr(self, expr: Expr.Set):
+        self.resolve(expr.object)
+        self.resolve(expr.value)
+        return None
+    
+    def visit_this_expr(self, expr: Expr.This):
+        if self.current_class is ClassType.NONE:
+            error_handler.error_at_token(expr.keyword, "Can't use 'this' outside of a class.")
+            return None
+        self.resolve_local(expr, expr.keyword)
+        return None
+    
     def visit_block_stmt(self, stmt: Stmt.Block):
         self.begin_scope()
         self.resolve(stmt.statements)
@@ -63,6 +80,21 @@ class Resolver(Expr.Visitor, Stmt.Visitor):
             self.resolve(stmt.initializer)
         self.define(stmt.name)
         return None
+    
+    def visit_class_stmt(self, stmt: Stmt.Class):
+        enclosing_class = self.current_class
+        self.current_class = ClassType.CLASS
+        self.declare(stmt.name)
+        self.define(stmt.name)
+        self.begin_scope()
+        self.scopes[-1]["this"] = True
+        for method in stmt.methods:
+            declaration = FunctionType.INITIALIZER if method.name.lexeme == "init" else FunctionType.METHOD
+            self.resolve_function(method, declaration)
+        self.end_scope()
+        self.current_class = enclosing_class
+        return None
+
     
     def visit_function_stmt(self, stmt: Stmt.Function):
         self.declare(stmt.name)
@@ -89,6 +121,8 @@ class Resolver(Expr.Visitor, Stmt.Visitor):
         if self.current_function is FunctionType.NONE:
             error_handler.error_at_token(stmt.keyword, "Can't return from top-level code.")
         if stmt.value is not None:
+            if self.current_function is FunctionType.INITIALIZER:
+                error_handler.error_at_token(stmt.keyword, "Can't return a value from an initializer.")
             self.resolve(stmt.value)
         return None
     

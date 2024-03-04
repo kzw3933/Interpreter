@@ -36,5 +36,5 @@ class Environment:
     def assign_at(self, distance: int, name: Token, value: object) -> None:
         self.ancestor(distance).values[name.lexeme] = value
 
-    def get_at(self, distance: int, name: Token) -> object:
-        return self.ancestor(distance).values[name.lexeme]
+    def get_at(self, distance: int, name: str) -> object:
+        return self.ancestor(distance).values[name]

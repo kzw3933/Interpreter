@@ -8,7 +8,9 @@ from lox.token import Token
 from lox.environment import Environment
 from lox.lib import Clock
 from lox.callable import LoxCallable
-from lox.function import LoxFunction
+from lox.loxfun import LoxFunction
+from lox.loxinstance import LoxInstance
+from lox.loxclass import LoxClass
 
 
 def is_truthy(value: object):
@@ -149,6 +151,25 @@ class Interpreter(Expr.Visitor, Stmt.Visitor):
             raise ErrorAtRuntime(expr.paren, f"Expected {function.arity()} arguments but got {len(arguments)}.")
         return function.call(self, arguments)
     
+    def visit_get_expr(self, expr: Expr.Get):
+        object = self.evaluate(expr.object)
+        if isinstance(object, LoxInstance):
+            instance: LoxInstance = object
+            return instance.get(expr.name)
+        raise ErrorAtRuntime(expr.name, "Only instances have properties.")
+    
+    def visit_set_expr(self, expr: Expr.Set):
+        object = self.evaluate(expr.object)
+        if not isinstance(object, LoxInstance):
+            raise ErrorAtRuntime(expr.name, "Only instances have fields.")
+        value = self.evaluate(expr.value)
+        instance: LoxInstance = object
+        instance.set(expr.name, value)
+
+    def visit_this_expr(self, expr: Expr.This):
+        return self.look_up_variable(expr.keyword, expr)
+        
+    
     def visit_expression_stmt(self, stmt: Stmt.Expression):
         self.evaluate(stmt.expression)
     
@@ -178,7 +199,7 @@ class Interpreter(Expr.Visitor, Stmt.Visitor):
         return None
     
     def visit_function_stmt(self, stmt: Stmt.Function):
-        function = LoxFunction(stmt, self.environment)
+        function = LoxFunction(stmt, self.environment, False)
         self.environment.define(stmt.name.lexeme, function)
         return None
     
@@ -187,6 +208,16 @@ class Interpreter(Expr.Visitor, Stmt.Visitor):
         if stmt.value is not None:
             value = self.evaluate(stmt.value)
         raise Return(value)
+    
+    def visit_class_stmt(self, stmt: Stmt.Class):
+        self.environment.define(stmt.name.lexeme, None)
+        methods: Dict[str, LoxFunction] = {}
+        for method in stmt.methods:
+            function = LoxFunction(method, self.environment, method.name.lexeme == "init")
+            methods[method.name.lexeme] = function
+        kclass = LoxClass(stmt.name.lexeme, methods)
+        self.environment.assign(stmt.name, kclass)
+        return None
 
 
     def evaluate(self, expression: Expr.Expr) -> object:
@@ -210,7 +241,7 @@ class Interpreter(Expr.Visitor, Stmt.Visitor):
     def look_up_variable(self, name: Token, expr: Expr.Expr):
         distance = self.locals.get(expr)
         if distance is not None:
-            return self.environment.get_at(distance, name)
+            return self.environment.get_at(distance, name.lexeme)
         else:
             return self.globals.get(name)
     

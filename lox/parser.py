@@ -1,7 +1,8 @@
 """
 句法文法
 program     ->  declaration* EOF;
-declaration ->  funDecl | varDecl | statement;
+declaration ->  classDecl | funDecl | varDecl | statement;
+classDecl   ->  "class" IDENTIFIER "{" function* "}";
 funDecl     ->  "fun" function;
 function    ->  IDENTIFIER "(" parameters? ")" block;
 parameters  ->  IDENTIFIER ("," IDENTIFIERS)*;
@@ -15,7 +16,7 @@ ifStmt      ->  "if" "(" expression ")" statement ("else" statement)?;
 whileStmt   ->  "while" "(" expression ")" statement; 
 returnStmt  ->  "return" expression? ";"; 
 expression  ->  assignment;
-assignment  ->  IDENTIFIER "=" assignment | logic_or;
+assignment  ->  (call ".")? IDENTIFIER "=" assignment | logic_or;
 logic_or    ->  logic_and ("or" logic_and)*;
 logic_and   ->  equality ("and" equality)*;
 equality    ->  comparison ( ("!=" | "==) comparison)*;
@@ -23,7 +24,7 @@ comparison  ->  term ( (">" | ">=" | "<" | "<=") term)*;
 term        ->  factor ( ("-" | "+") factor)*;
 factor      ->  unary ( ("/" | "*") unary)*;
 unary       ->  ( "!" | "-" ) unary | call;
-call        ->  primary ("(" arguments? ")")*;
+call        ->  primary ("(" arguments? ")" | "." IDENTIFIER)*;
 arguments   ->  expression ("," expression)*;
 primary     ->  "true" | "false" | "nil" | NUMBER | STRING | "(" expression ")" | IDENTIFIER;
 """
@@ -49,6 +50,8 @@ class Parser:
     
     def declaration(self) -> Stmt.Stmt:
         try:
+            if self.match(TokenType.CLASS):
+                return self.class_declaration()
             if self.match(TokenType.FUN):
                 return self.function("function")
             if self.match(TokenType.VAR):
@@ -58,6 +61,17 @@ class Parser:
             self.synchronize()
             return None
         
+    def class_declaration(self) -> Stmt.Stmt:
+        name = self.consume(TokenType.IDENTIFIER, "Expect class name.")
+        self.consume(TokenType.LEFT_BRACE, "Expect '{' before class body.")
+        methods: List[Stmt.Function] = []
+        while not self.check(TokenType.RIGHT_BRACE) and not self.is_at_end():
+            methods.append(self.function("method"))
+        self.consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.")
+        return Stmt.Class(name, methods)
+    
+
+
     def function(self, kind: str) -> Stmt.Function:
         name = self.consume(TokenType.IDENTIFIER, f"Expect {kind} name.")
         self.consume(TokenType.LEFT_PAREN, f"Expect '(' after {kind} name.")
@@ -182,8 +196,11 @@ class Parser:
             equals = self.previous()
             value = self.assignment()
             if isinstance(expr, Expr.Variable):
-                name = expr.name
-                return Expr.Assign(name, value)
+                var: Expr.Variable = expr
+                return Expr.Assign(var.name, value)
+            elif isinstance(expr, Expr.Get):
+                get: Expr.Get = expr
+                return Expr.Set(get.object, get.name, value)
             self.error(equals, "Invalid assignment target.")
         return expr
     
@@ -248,6 +265,9 @@ class Parser:
         while True:
             if self.match(TokenType.LEFT_PAREN):
                 expr = self.finish_call(expr)
+            elif self.match(TokenType.DOT):
+                name = self.consume(TokenType.IDENTIFIER,"Expect property name after .")
+                expr = Expr.Get(expr, name)
             else:
                 break
         return expr
@@ -273,6 +293,8 @@ class Parser:
             return Expr.Literal(None)
         if self.match(TokenType.NUMBER, TokenType.STRING):
             return Expr.Literal(self.previous().literal)
+        if self.match(TokenType.THIS):
+            return Expr.This(self.previous())
         if self.match(TokenType.IDENTIFIER):
             return Expr.Variable(self.previous())
         if self.match(TokenType.LEFT_PAREN):

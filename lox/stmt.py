@@ -16,6 +16,23 @@ class Block(Stmt):
     def accept(self, visitor):
         return visitor.visit_block_stmt(self)
 
+class Function(Stmt):
+    def __init__(self, name: Token, params: List[Token], body: List[Stmt]):
+        self.name: Token = name
+        self.params: List[Token] = params
+        self.body: List[Stmt] = body
+
+    def accept(self, visitor):
+        return visitor.visit_function_stmt(self)
+
+class Class(Stmt):
+    def __init__(self, name: Token, methods: List[Function]):
+        self.name: Token = name
+        self.methods: List[Function] = methods
+
+    def accept(self, visitor):
+        return visitor.visit_class_stmt(self)
+
 class Expression(Stmt):
     def __init__(self, expression: Expr):
         self.expression: Expr = expression
@@ -47,15 +64,6 @@ class While(Stmt):
     def accept(self, visitor):
         return visitor.visit_while_stmt(self)
 
-class Function(Stmt):
-    def __init__(self, name: Token, params: List[Token], body: List[Stmt]):
-        self.name: Token = name
-        self.params: List[Token] = params
-        self.body: List[Stmt] = body
-
-    def accept(self, visitor):
-        return visitor.visit_function_stmt(self)
-
 class Var(Stmt):
     def __init__(self, name: Token, initializer: Expr):
         self.name: Token = name
@@ -79,6 +87,14 @@ class Visitor(ABC):
         pass
 
     @abstractmethod
+    def visit_function_stmt(self, stmt: Function):
+        pass
+
+    @abstractmethod
+    def visit_class_stmt(self, stmt: Class):
+        pass
+
+    @abstractmethod
     def visit_expression_stmt(self, stmt: Expression):
         pass
 
@@ -92,10 +108,6 @@ class Visitor(ABC):
 
     @abstractmethod
     def visit_while_stmt(self, stmt: While):
-        pass
-
-    @abstractmethod
-    def visit_function_stmt(self, stmt: Function):
         pass
 
     @abstractmethod
