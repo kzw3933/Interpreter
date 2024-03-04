@@ -14,7 +14,7 @@ class LoxClass(LoxCallable):
     
     def arity(self) -> int:
         initializer = self.find_method("init")
-        if initializer is not None:
+        if initializer is None:
             return 0
         return initializer.arity()
     
