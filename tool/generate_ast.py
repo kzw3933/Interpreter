@@ -15,6 +15,7 @@ def main():
         "Literal: object value",
         "Logical: Expr left, Token operator, Expr right",
         "Set: Expr object, Token name, Expr value",
+        "Super: Token keyword, Token method",
         "This: Token keyword",
         "Unary: Token operator, Expr right",
         "Variable: Token name"
@@ -22,13 +23,13 @@ def main():
     define_ast(output_dir, "Stmt", [
         "Block: List[Stmt] statements",
         "Function: Token name, List[Token] params, List[Stmt] body",
-        "Class: Token name, List[Function] methods",
-        "Expression: Expr expression",
-        "Print: Expr expression",
-        "If: Expr condition, Stmt then_branch, Stmt else_branch",
-        "While: Expr condition, Stmt body",
-        "Var: Token name, Expr initializer",
-        "Return: Token keyword, Expr value",
+        "Class: Token name, Expr.Variable superclass, List[Function] methods",
+        "Expression: Expr.Expr expression",
+        "Print: Expr.Expr expression",
+        "If: Expr.Expr condition, Stmt then_branch, Stmt else_branch",
+        "While: Expr.Expr condition, Stmt body",
+        "Var: Token name, Expr.Expr initializer",
+        "Return: Token keyword, Expr.Expr value",
     ], "Expr")
 
 def define_ast(output_dir: str, base_name: str, types: List[str], dependency: Optional[str]=None):
@@ -38,7 +39,7 @@ def define_ast(output_dir: str, base_name: str, types: List[str], dependency: Op
         f.write("from typing import List\n")
         f.write("from lox.token import Token\n")
         if dependency is not None:
-            f.write(f"from {output_dir.split('/')[-1]}.{dependency.lower()} import {dependency}\n")
+            f.write(f"import {output_dir.split('/')[-1]}.{dependency.lower()} as {dependency}\n")
         f.write("\n")
         define_base_class(f, base_name)
         f.write("\n")

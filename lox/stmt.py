@@ -1,7 +1,7 @@
 from abc import ABC, abstractmethod
 from typing import List
 from lox.token import Token
-from lox.expr import Expr
+import lox.expr as Expr
 
 class Stmt(ABC):
     @abstractmethod
@@ -26,30 +26,31 @@ class Function(Stmt):
         return visitor.visit_function_stmt(self)
 
 class Class(Stmt):
-    def __init__(self, name: Token, methods: List[Function]):
+    def __init__(self, name: Token, superclass: Expr.Variable, methods: List[Function]):
         self.name: Token = name
+        self.superclass: Expr.Variable = superclass
         self.methods: List[Function] = methods
 
     def accept(self, visitor):
         return visitor.visit_class_stmt(self)
 
 class Expression(Stmt):
-    def __init__(self, expression: Expr):
-        self.expression: Expr = expression
+    def __init__(self, expression: Expr.Expr):
+        self.expression: Expr.Expr = expression
 
     def accept(self, visitor):
         return visitor.visit_expression_stmt(self)
 
 class Print(Stmt):
-    def __init__(self, expression: Expr):
-        self.expression: Expr = expression
+    def __init__(self, expression: Expr.Expr):
+        self.expression: Expr.Expr = expression
 
     def accept(self, visitor):
         return visitor.visit_print_stmt(self)
 
 class If(Stmt):
-    def __init__(self, condition: Expr, then_branch: Stmt, else_branch: Stmt):
-        self.condition: Expr = condition
+    def __init__(self, condition: Expr.Expr, then_branch: Stmt, else_branch: Stmt):
+        self.condition: Expr.Expr = condition
         self.then_branch: Stmt = then_branch
         self.else_branch: Stmt = else_branch
 
@@ -57,25 +58,25 @@ class If(Stmt):
         return visitor.visit_if_stmt(self)
 
 class While(Stmt):
-    def __init__(self, condition: Expr, body: Stmt):
-        self.condition: Expr = condition
+    def __init__(self, condition: Expr.Expr, body: Stmt):
+        self.condition: Expr.Expr = condition
         self.body: Stmt = body
 
     def accept(self, visitor):
         return visitor.visit_while_stmt(self)
 
 class Var(Stmt):
-    def __init__(self, name: Token, initializer: Expr):
+    def __init__(self, name: Token, initializer: Expr.Expr):
         self.name: Token = name
-        self.initializer: Expr = initializer
+        self.initializer: Expr.Expr = initializer
 
     def accept(self, visitor):
         return visitor.visit_var_stmt(self)
 
 class Return(Stmt):
-    def __init__(self, keyword: Token, value: Expr):
+    def __init__(self, keyword: Token, value: Expr.Expr):
         self.keyword: Token = keyword
-        self.value: Expr = value
+        self.value: Expr.Expr = value
 
     def accept(self, visitor):
         return visitor.visit_return_stmt(self)

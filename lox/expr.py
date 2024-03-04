@@ -74,6 +74,14 @@ class Set(Expr):
     def accept(self, visitor):
         return visitor.visit_set_expr(self)
 
+class Super(Expr):
+    def __init__(self, keyword: Token, method: Token):
+        self.keyword: Token = keyword
+        self.method: Token = method
+
+    def accept(self, visitor):
+        return visitor.visit_super_expr(self)
+
 class This(Expr):
     def __init__(self, keyword: Token):
         self.keyword: Token = keyword
@@ -128,6 +136,10 @@ class Visitor(ABC):
 
     @abstractmethod
     def visit_set_expr(self, expr: Set):
+        pass
+
+    @abstractmethod
+    def visit_super_expr(self, expr: Super):
         pass
 
     @abstractmethod

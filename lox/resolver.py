@@ -15,7 +15,7 @@ class Resolver(Expr.Visitor, Stmt.Visitor):
         self.current_class = ClassType.NONE
 
     def visit_variable_expr(self, expr: Expr.Variable):
-        if len(self.scopes) > 0 and expr.name.lexeme in self.scopes[-1] and self.scopes[-1][expr.name.lexeme] is False:
+        if len(self.scopes) > 0 and expr.name.lexeme in self.scopes[-1] and self.scopes[-1][expr.name.lexeme] == False:
             error_handler.error_at_token(expr.name, "Can't read local variable in its own initializer.")
         self.resolve_local(expr, expr.name)
         return None
@@ -62,9 +62,17 @@ class Resolver(Expr.Visitor, Stmt.Visitor):
         return None
     
     def visit_this_expr(self, expr: Expr.This):
-        if self.current_class is ClassType.NONE:
+        if self.current_class == ClassType.NONE:
             error_handler.error_at_token(expr.keyword, "Can't use 'this' outside of a class.")
             return None
+        self.resolve_local(expr, expr.keyword)
+        return None
+    
+    def visit_super_expr(self, expr: Expr.Super):
+        if self.current_class == ClassType.NONE:
+            error_handler.error_at_token(expr.keyword, "Can't use'super' outside of a class.")
+        elif self.current_class != ClassType.SUBCLASS:
+            error_handler.error_at_token(expr.keyword, "Can't use 'super' in a class with no superclass.")
         self.resolve_local(expr, expr.keyword)
         return None
     
@@ -86,12 +94,26 @@ class Resolver(Expr.Visitor, Stmt.Visitor):
         self.current_class = ClassType.CLASS
         self.declare(stmt.name)
         self.define(stmt.name)
+        if stmt.superclass is not None and stmt.name.lexeme == stmt.superclass.name.lexeme:
+            error_handler.error_at_token(stmt.superclass.name, "A class can't inherit from itself.")
+        if stmt.superclass is not None:
+            self.current_class = ClassType.SUBCLASS
+            self.resolve(stmt.superclass)
+
+        if stmt.superclass is not None:
+            self.begin_scope()
+            self.scopes[-1]["super"] = True
         self.begin_scope()
         self.scopes[-1]["this"] = True
+
         for method in stmt.methods:
             declaration = FunctionType.INITIALIZER if method.name.lexeme == "init" else FunctionType.METHOD
             self.resolve_function(method, declaration)
         self.end_scope()
+
+        if stmt.superclass is not None:
+            self.end_scope()
+
         self.current_class = enclosing_class
         return None
 
@@ -118,10 +140,10 @@ class Resolver(Expr.Visitor, Stmt.Visitor):
         return None
     
     def visit_return_stmt(self, stmt: Stmt.Return):
-        if self.current_function is FunctionType.NONE:
+        if self.current_function == FunctionType.NONE:
             error_handler.error_at_token(stmt.keyword, "Can't return from top-level code.")
         if stmt.value is not None:
-            if self.current_function is FunctionType.INITIALIZER:
+            if self.current_function == FunctionType.INITIALIZER:
                 error_handler.error_at_token(stmt.keyword, "Can't return a value from an initializer.")
             self.resolve(stmt.value)
         return None

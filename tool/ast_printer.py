@@ -41,6 +41,9 @@ class AstPrinter(Expr.Visitor):
     def visit_this_expr(self, expr: Expr.This):
         return "this"
 
+    def visit_super_expr(self, expr: Expr.Super):
+        return f"super.{expr.method.lexeme}" 
+    
     def print(self, expr: Expr.Expr):
         return expr.accept(self)
     

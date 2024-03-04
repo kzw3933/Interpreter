@@ -2,7 +2,7 @@
 句法文法
 program     ->  declaration* EOF;
 declaration ->  classDecl | funDecl | varDecl | statement;
-classDecl   ->  "class" IDENTIFIER "{" function* "}";
+classDecl   ->  "class" IDENTIFIER ("<" IDENTIFIER)? "{" function* "}";
 funDecl     ->  "fun" function;
 function    ->  IDENTIFIER "(" parameters? ")" block;
 parameters  ->  IDENTIFIER ("," IDENTIFIERS)*;
@@ -26,7 +26,7 @@ factor      ->  unary ( ("/" | "*") unary)*;
 unary       ->  ( "!" | "-" ) unary | call;
 call        ->  primary ("(" arguments? ")" | "." IDENTIFIER)*;
 arguments   ->  expression ("," expression)*;
-primary     ->  "true" | "false" | "nil" | NUMBER | STRING | "(" expression ")" | IDENTIFIER;
+primary     ->  "true" | "false" | "nil" | "this" | NUMBER | STRING | "(" expression ")" | IDENTIFIER | "super" "." IDENTIFIER;
 """
 from typing import List
 
@@ -63,12 +63,16 @@ class Parser:
         
     def class_declaration(self) -> Stmt.Stmt:
         name = self.consume(TokenType.IDENTIFIER, "Expect class name.")
+        superclass = None
+        if self.match(TokenType.LESS):
+            self.consume(TokenType.IDENTIFIER, "Expect superclass name.")
+            superclass = Expr.Variable(self.previous())
         self.consume(TokenType.LEFT_BRACE, "Expect '{' before class body.")
         methods: List[Stmt.Function] = []
         while not self.check(TokenType.RIGHT_BRACE) and not self.is_at_end():
             methods.append(self.function("method"))
         self.consume(TokenType.RIGHT_BRACE, "Expect '}' after class body.")
-        return Stmt.Class(name, methods)
+        return Stmt.Class(name, superclass, methods)
     
 
 
@@ -293,6 +297,11 @@ class Parser:
             return Expr.Literal(None)
         if self.match(TokenType.NUMBER, TokenType.STRING):
             return Expr.Literal(self.previous().literal)
+        if self.match(TokenType.SUPER):
+            keyword = self.previous()
+            self.consume(TokenType.DOT, "Expect '.' after 'super'.")
+            method = self.consume(TokenType.IDENTIFIER, "Expect superclass method name.")
+            return Expr.Super(keyword, method)
         if self.match(TokenType.THIS):
             return Expr.This(self.previous())
         if self.match(TokenType.IDENTIFIER):
