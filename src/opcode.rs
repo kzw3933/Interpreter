@@ -1,18 +1,15 @@
-#[repr(u8)]
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub enum OpCode {
-    CONSTANT,
-    RETURN ,
-    
-}
+use crate::impl_from_u8_for_enum;
 
-
-impl From<u8> for OpCode {
-    fn from(value: u8) -> Self {
-        match value {
-            0 => OpCode::CONSTANT,
-            1 => OpCode::RETURN,
-            _ => panic!("Invalid OpCode value: {}", value),
-        }
+impl_from_u8_for_enum!(
+    #[repr(u8)]
+    #[derive(Debug, Clone, Copy, PartialEq)]
+    pub enum OpCode {
+        CONSTANT,
+        NEGATE,
+        ADD,
+        SUBTRACT,
+        MULTIPLY,
+        DIVIDE,
+        RETURN,
     }
-}
+);

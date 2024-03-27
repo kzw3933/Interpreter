@@ -5,9 +5,9 @@ use crate::opcode::OpCode;
 
 #[derive(Default)]
 pub struct Chunk {
-    codes: Vec<u8>,
-    lines: Vec<u32>,
-    values: Vec<Value>,
+    pub codes: Vec<u8>,
+    pub lines: Vec<u32>,
+    pub values: Vec<Value>,
 }
 
 
@@ -16,6 +16,11 @@ impl Chunk {
         self.codes.clear();
         self.lines.clear();
         self.values.clear();
+    }
+
+    pub fn write_codes(&mut self, codes: &[(u8, u32)]) {
+        self.codes.extend(codes.iter().map(|(code, _)| *code));
+        self.lines.extend(codes.iter().map(|(_, line)| *line));
     }
 
     pub fn write_code(&mut self, code: u8, line: u32) {
@@ -36,7 +41,7 @@ impl Chunk {
         }
     }
 
-    fn disassemble_inst(&self, offset: usize) -> usize {
+    pub fn disassemble_inst(&self, offset: usize) -> usize {
         print!("{:04} ", offset);
         if offset > 0 && self.lines[offset] == self.lines[offset-1] {
             print!("   | ")
@@ -47,8 +52,14 @@ impl Chunk {
         let inst: OpCode = inst.into();
 
         match inst {
-            OpCode::RETURN => return self.simple_instruction(inst, offset),
             OpCode::CONSTANT => return self.constant_instruction(inst, offset),
+            OpCode::NEGATE => return self.simple_instruction(inst, offset),
+            OpCode::ADD => return self.simple_instruction(inst, offset),
+            OpCode::SUBTRACT => return self.simple_instruction(inst, offset),
+            OpCode::MULTIPLY => return self.simple_instruction(inst, offset),
+            OpCode::DIVIDE => return self.simple_instruction(inst, offset),
+            OpCode::RETURN => return self.simple_instruction(inst, offset),
+            
         }
     }
 
