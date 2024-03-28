@@ -12,11 +12,6 @@ pub struct Chunk {
 
 
 impl Chunk {
-    pub fn clear(&mut self) {
-        self.codes.clear();
-        self.lines.clear();
-        self.values.clear();
-    }
 
     pub fn write_codes(&mut self, codes: &[(u8, u32)]) {
         self.codes.extend(codes.iter().map(|(code, _)| *code));
@@ -52,13 +47,13 @@ impl Chunk {
         let inst: OpCode = inst.into();
 
         match inst {
-            OpCode::CONSTANT => return self.constant_instruction(inst, offset),
-            OpCode::NEGATE => return self.simple_instruction(inst, offset),
-            OpCode::ADD => return self.simple_instruction(inst, offset),
-            OpCode::SUBTRACT => return self.simple_instruction(inst, offset),
-            OpCode::MULTIPLY => return self.simple_instruction(inst, offset),
-            OpCode::DIVIDE => return self.simple_instruction(inst, offset),
-            OpCode::RETURN => return self.simple_instruction(inst, offset),
+            OpCode::constant => return self.constant_instruction(inst, offset),
+            OpCode::neg => return self.simple_instruction(inst, offset),
+            OpCode::add => return self.simple_instruction(inst, offset),
+            OpCode::sub => return self.simple_instruction(inst, offset),
+            OpCode::mul => return self.simple_instruction(inst, offset),
+            OpCode::div => return self.simple_instruction(inst, offset),
+            OpCode::ret => return self.simple_instruction(inst, offset),
             
         }
     }
@@ -69,9 +64,9 @@ impl Chunk {
     }
 
     fn constant_instruction(&self, inst: OpCode, offset: usize) -> usize {
-        let constant = self.codes[offset+1];
-        print!("{:?}\t{:4} '", inst, constant);
-        let value = &self.values[constant as usize];
+        let constant_index = self.codes[offset+1];
+        print!("{:?}\t{:4} '", inst, constant_index);
+        let value = &self.values[constant_index as usize];
         value.print();
         print!("'\n");
         return offset + 2;

@@ -1,15 +1,16 @@
 use crate::chunk::Chunk;
 use crate::opcode::OpCode;
 use crate::value::Value;
+use crate::compiler::Compiler;
 use crate::define_const;
 
 define_const!(DEBUG_TRACE_EXECUTION, true, bool);
 define_const!(STACK_MAX, 256, usize);
 
 pub enum Result {
-    SUCCESS,
-    CERROR,
-    RERROR,
+    success,
+    compile_error,
+    runtime_error,
 }
 
 
@@ -19,6 +20,7 @@ pub struct Vm {
     pub chunk: Chunk,
     stack: Vec<Value>,
     ip: usize,
+    compiler: Compiler,
 }
 
 
@@ -29,16 +31,13 @@ impl Vm {
             chunk: Chunk::default(),
             stack: Vec::with_capacity(STACK_MAX),
             ip: 0,
+            compiler: Compiler::default(),
         }
     }
 
-    pub fn free(&mut self) {
-        self.chunk.clear();
-        self.stack.clear();
-    }
-
-    pub fn interpret(&mut self) -> Result {
-        return self.run()
+    pub fn interpret(&mut self, line: String) -> Result {
+        self.compiler.compile(line);
+        return Result::success;
     }    
 
     #[inline]
@@ -71,7 +70,7 @@ impl Vm {
     pub fn run(&mut self) -> Result {
         loop {
             if self.ip >= self.chunk.codes.len() {
-                return Result::SUCCESS;
+                return Result::success;
             }
 
             if DEBUG_TRACE_EXECUTION {
@@ -80,35 +79,35 @@ impl Vm {
 
             let inst = self.read_byte();
             match inst.into() {
-                OpCode::CONSTANT => {
+                OpCode::constant => {
                     let value = self.read_constant();
                     self.stack.push(value);
                 },
-                OpCode::NEGATE => {
+                OpCode::neg => {
                     let value = self.stack.pop().unwrap();
                     self.stack.push(-value);
                 },
-                OpCode::ADD => {
+                OpCode::add => {
                     let rhs = self.stack.pop().unwrap();
                     let lhs = self.stack.pop().unwrap();
                     self.stack.push(lhs + rhs);
                 },
-                OpCode::SUBTRACT => {
+                OpCode::sub => {
                     let rhs = self.stack.pop().unwrap();
                     let lhs = self.stack.pop().unwrap();
                     self.stack.push(lhs - rhs);
                 },
-                OpCode::MULTIPLY => {
+                OpCode::mul => {
                     let rhs = self.stack.pop().unwrap();
                     let lhs = self.stack.pop().unwrap();
                     self.stack.push(lhs * rhs);
                 },
-                OpCode::DIVIDE => {
+                OpCode::div => {
                     let rhs = self.stack.pop().unwrap();
                     let lhs = self.stack.pop().unwrap();
                     self.stack.push(lhs / rhs);
                 },
-                OpCode::RETURN => {
+                OpCode::ret => {
                     self.stack.pop()
                             .unwrap()
                             .print();
@@ -116,10 +115,5 @@ impl Vm {
             }
         }
     }
-
-    pub fn clear_stack(&mut self) {
-        self.stack.clear();
-    }
-
 
 }
