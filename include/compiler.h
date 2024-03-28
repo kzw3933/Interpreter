@@ -1,3 +1,5 @@
 #pragma once
+#include "chunk.h"
+#include "vm.h"
 
-void compile(const char* source);
+bool compile(const char* source, Chunk* chunk);
